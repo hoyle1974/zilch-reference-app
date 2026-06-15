@@ -119,6 +119,15 @@ def get_environment_info():
     }
 
 
+def get_deployment_info():
+    """Get Cloud Run deployment metadata."""
+    return {
+        "revision": os.getenv("K_REVISION", "local-development"),
+        "service": os.getenv("K_SERVICE", "local"),
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+    }
+
+
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -273,12 +282,53 @@ HTML_TEMPLATE = """
             padding-bottom: 10px;
             border-bottom: 2px solid #667eea;
         }
+        .deployment-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #047857;
+        }
+        .deployment-status {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .deployment-details {
+            font-size: 0.95em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-label {
+            font-weight: 600;
+            min-width: 80px;
+        }
+        .deployment-badge code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: "Monaco", "Courier New", monospace;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🌍 Zilch Status Dashboard</h1>
         <p class="subtitle">Service availability and configuration for this Cloud Run deployment</p>
+
+        <div class="deployment-badge">
+            <div class="deployment-status">🚀 LIVE DEPLOYMENT</div>
+            <div class="deployment-details">
+                <span class="detail-label">Revision:</span> <code>{{ deployment.revision }}</code>
+            </div>
+            <div class="deployment-details">
+                <span class="detail-label">Deployed:</span> <span>{{ deployment.timestamp }}</span>
+            </div>
+        </div>
 
         <div class="info-box">
             <div class="info-grid">
@@ -364,7 +414,7 @@ HTML_TEMPLATE = """
         </div>
 
         <div class="footer">
-            <p>Generated on {{ timestamp }} | Zilch Phase 1 + Phase 2 + Phase 3 Reference Application</p>
+            <p>Generated on {{ timestamp }} | Zilch Phase 1 + Phase 2 + Phase 3 Reference Application | Revision: {{ deployment.revision }}</p>
             <p style="margin-top: 10px; color: #ccc;">💡 This app reads Zilch environment variables set by Cloud Run. Visit <code>/.json</code> for raw API response.</p>
         </div>
     </div>
@@ -378,12 +428,14 @@ def dashboard():
     """Display the Zilch services dashboard."""
     services = check_service_status()
     env = get_environment_info()
+    deployment = get_deployment_info()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
 
     return render_template_string(
         HTML_TEMPLATE,
         services=services,
         env=env,
+        deployment=deployment,
         timestamp=timestamp
     )
 
