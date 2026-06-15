@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Zilch Reference Application
-Demonstrates all Zilch Phase 1 + Phase 2 services and their status.
+Demonstrates all Zilch Phase 1 + Phase 2 + Phase 3 services and their status.
 """
 
 import os
@@ -51,6 +51,48 @@ def check_service_status():
             "description": "ML/AI APIs including Gemini (free tier limits apply)",
             "status": "✅ ENABLED" if os.getenv("ZILCH_VERTEX_AI_ENABLED") == "true" else "⭕ DISABLED",
         },
+        "Pub/Sub": {
+            "enabled": os.getenv("ZILCH_PUBSUB_TOPIC") != "",
+            "env_vars": ["ZILCH_PUBSUB_TOPIC", "ZILCH_PUBSUB_SUBSCRIPTION"],
+            "description": "Event streaming and messaging (10 GB/month free tier)",
+            "status": "✅ ENABLED" if os.getenv("ZILCH_PUBSUB_TOPIC") else "⭕ DISABLED",
+        },
+        "Cloud Tasks": {
+            "enabled": os.getenv("ZILCH_CLOUD_TASKS_QUEUE") != "",
+            "env_vars": ["ZILCH_CLOUD_TASKS_QUEUE"],
+            "description": "Async job queues (1M tasks/month free tier)",
+            "status": "✅ ENABLED" if os.getenv("ZILCH_CLOUD_TASKS_QUEUE") else "⭕ DISABLED",
+        },
+        "BigQuery": {
+            "enabled": os.getenv("ZILCH_BIGQUERY_DATASET") != "",
+            "env_vars": ["ZILCH_BIGQUERY_DATASET"],
+            "description": "Analytics warehouse (1 TB queried/month free tier)",
+            "status": "✅ ENABLED" if os.getenv("ZILCH_BIGQUERY_DATASET") else "⭕ DISABLED",
+        },
+        "Cloud KMS": {
+            "enabled": os.getenv("ZILCH_KMS_KEY_ID") != "",
+            "env_vars": ["ZILCH_KMS_KEY_ID"],
+            "description": "Encryption key management (6 keys, 10K API calls/month free tier)",
+            "status": "✅ ENABLED" if os.getenv("ZILCH_KMS_KEY_ID") else "⭕ DISABLED",
+        },
+        "Vision AI": {
+            "enabled": os.getenv("ZILCH_VISION_AI_ENABLED") == "true",
+            "env_vars": ["ZILCH_VISION_AI_ENABLED"],
+            "description": "Image processing and analysis (1,000 images/month free tier)",
+            "status": "✅ ENABLED" if os.getenv("ZILCH_VISION_AI_ENABLED") == "true" else "⭕ DISABLED",
+        },
+        "Speech-to-Text": {
+            "enabled": os.getenv("ZILCH_SPEECH_TO_TEXT_ENABLED") == "true",
+            "env_vars": ["ZILCH_SPEECH_TO_TEXT_ENABLED"],
+            "description": "Audio transcription (60 minutes/month free tier)",
+            "status": "✅ ENABLED" if os.getenv("ZILCH_SPEECH_TO_TEXT_ENABLED") == "true" else "⭕ DISABLED",
+        },
+        "Translation API": {
+            "enabled": os.getenv("ZILCH_TRANSLATION_ENABLED") == "true",
+            "env_vars": ["ZILCH_TRANSLATION_ENABLED"],
+            "description": "Multi-language support (500K characters/month free tier)",
+            "status": "✅ ENABLED" if os.getenv("ZILCH_TRANSLATION_ENABLED") == "true" else "⭕ DISABLED",
+        },
     }
 
     return services
@@ -66,6 +108,14 @@ def get_environment_info():
         "storage_bucket": os.getenv("ZILCH_STORAGE_BUCKET", "Not set"),
         "firebase_enabled": os.getenv("ZILCH_FIREBASE_ENABLED", "Not set"),
         "vertex_ai_enabled": os.getenv("ZILCH_VERTEX_AI_ENABLED", "Not set"),
+        "pubsub_topic": os.getenv("ZILCH_PUBSUB_TOPIC", "Not set"),
+        "pubsub_subscription": os.getenv("ZILCH_PUBSUB_SUBSCRIPTION", "Not set"),
+        "cloud_tasks_queue": os.getenv("ZILCH_CLOUD_TASKS_QUEUE", "Not set"),
+        "bigquery_dataset": os.getenv("ZILCH_BIGQUERY_DATASET", "Not set"),
+        "kms_key_id": os.getenv("ZILCH_KMS_KEY_ID", "Not set"),
+        "vision_ai_enabled": os.getenv("ZILCH_VISION_AI_ENABLED", "Not set"),
+        "speech_to_text_enabled": os.getenv("ZILCH_SPEECH_TO_TEXT_ENABLED", "Not set"),
+        "translation_enabled": os.getenv("ZILCH_TRANSLATION_ENABLED", "Not set"),
     }
 
 
@@ -282,11 +332,39 @@ HTML_TEMPLATE = """
                     <span class="info-label">Vertex AI Enabled</span>
                     <span class="info-value">{{ env.vertex_ai_enabled }}</span>
                 </div>
+                <div class="info-item">
+                    <span class="info-label">Pub/Sub Topic</span>
+                    <span class="info-value">{{ env.pubsub_topic }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cloud Tasks Queue</span>
+                    <span class="info-value">{{ env.cloud_tasks_queue }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">BigQuery Dataset</span>
+                    <span class="info-value">{{ env.bigquery_dataset }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">KMS Key ID</span>
+                    <span class="info-value">{{ env.kms_key_id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Vision AI Enabled</span>
+                    <span class="info-value">{{ env.vision_ai_enabled }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Speech-to-Text Enabled</span>
+                    <span class="info-value">{{ env.speech_to_text_enabled }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Translation Enabled</span>
+                    <span class="info-value">{{ env.translation_enabled }}</span>
+                </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>Generated on {{ timestamp }} | Zilch Phase 1 + Phase 2 Reference Application</p>
+            <p>Generated on {{ timestamp }} | Zilch Phase 1 + Phase 2 + Phase 3 Reference Application</p>
             <p style="margin-top: 10px; color: #ccc;">💡 This app reads Zilch environment variables set by Cloud Run. Visit <code>/.json</code> for raw API response.</p>
         </div>
     </div>
