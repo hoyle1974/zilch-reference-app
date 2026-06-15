@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Zilch Reference Application
-Demonstrates all Zilch Phase 1 + Phase 2 + Phase 3 services and their status.
+Demonstrates all Zilch services and their status.
 """
 
 import os
@@ -414,7 +414,7 @@ HTML_TEMPLATE = """
         </div>
 
         <div class="footer">
-            <p>Generated on {{ timestamp }} | Zilch Phase 1 + Phase 2 + Phase 3 Reference Application | Revision: {{ deployment.revision }}</p>
+            <p>Generated on {{ timestamp }} | Zilch Reference Application | Revision: {{ deployment.revision }}</p>
             <p style="margin-top: 10px; color: #ccc;">💡 This app reads Zilch environment variables set by Cloud Run. Visit <code>/.json</code> for raw API response.</p>
         </div>
     </div>
