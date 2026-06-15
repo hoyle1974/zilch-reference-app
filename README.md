@@ -22,17 +22,47 @@ cd ~/code/zilch-reference-app
 
 # Update .zilch.config with your settings
 nano .zilch.config
-# Change: gcp_project_id to your actual GCP project
+# Change: gcp_project_id to your actual GCP project ID
 # Change: github_owner to your GitHub username
+# Customize: app_name, enable services as needed
 
 # Run Zilch deployment
 bash ~/code/zilch-gcp/deploy.sh
 
-# On prompts:
-# - Use settings from .zilch.config
-# - Enable all services you want to demonstrate
-# - Cloud Build: yes (GitOps deployment)
+# Script will prompt for configuration and then run Terraform
 ```
+
+### Real Deployment Example
+
+Here's what a successful deployment looks like:
+
+```
+=================================================================
+ 🎉 SUCCESS: Zilch Architecture Instantiated Successfully!
+=================================================================
+📍 Service Endpoint URL: https://gulp-app-atnajubp4a-uc.a.run.app
+👤 Bound Run Identity:   gulp-app@test-z-1-499406.iam.gserviceaccount.com
+🌐 Operational Region:   us-central1
+
+📋 Available Runtime Application Discovery Environment Tunnels:
+  ↳ ZILCH_FIRESTORE_DATABASE : (default)
+  ↳ ZILCH_SECRET_PREFIX      : gulp-app-
+
+💡 Reminder: Your setup operates completely on Google's Free tier limits.
+   Track parameters safely via: https://cloud.google.com/always-free
+
+📚 Next Steps:
+   1. Deploy your code: gcloud run deploy gulp-app --source .
+   2. View logs: gcloud run logs read gulp-app --region=us-central1
+=================================================================
+```
+
+**What this tells you:**
+- ✅ Cloud Run service is live at the URL shown
+- ✅ Service account created with proper IAM binding
+- ✅ Firestore database created (ZILCH_FIRESTORE_DATABASE env var)
+- ✅ Secret Manager enabled (ZILCH_SECRET_PREFIX env var)
+- ✅ All resources in Always Free tier region (us-central1)
 
 ### 2. View the Dashboard
 
@@ -274,25 +304,83 @@ All services accessed are within Always Free tier limits:
 **Fix:** 
 1. Verify `.zilch.config` has the service enabled
 2. Re-run `./deploy.sh` to update infrastructure
-3. Cloud Build will redeploy with new env vars
+3. Cloud Run will restart with new env vars
+
+### Verifying Deployment Success
+
+After running `./deploy.sh`, look for:
+
+```
+✅ Resources: 4 added, 1 changed, 0 destroyed.
+✅ Service Endpoint URL: https://...
+✅ Bound Run Identity: app-name@project.iam.gserviceaccount.com
+✅ Available Runtime Application Discovery Environment Tunnels
+```
+
+**If you see these**, the deployment succeeded!
 
 ### Health check fails after deployment
 
 **Cause:** Container startup time or port misconfiguration
 
-**Check:**
+**Check logs:**
 ```bash
-gcloud run logs read zilch-reference-app --region=us-central1 --limit=50
+gcloud run logs read app-name --region=us-central1 --limit=50
 ```
 
-### "Hello World" image appears instead of reference app
+**Check service:**
+```bash
+gcloud run services describe app-name --region=us-central1
+```
 
-**Cause:** Cloud Build didn't deploy yet, Cloud Run is still running initial image
+### App returns 503 or times out
 
-**Fix:**
-1. Check Cloud Build status: `gcloud builds log --stream LATEST`
-2. Wait for build to complete (3-5 minutes)
-3. Cloud Run will auto-pull new image
+**Cause:** Cloud Run is still starting the container
+
+**Wait:** Cloud Run takes 30-60 seconds to start after deployment
+
+**Check:**
+```bash
+curl -v https://your-app-url/health
+```
+
+### "Hello World" image appears instead of your app
+
+**Cause:** Cloud Build hasn't deployed yet (Phase 2 only)
+
+**Check:**
+```bash
+gcloud builds log --stream LATEST
+```
+
+**Expected:** Build takes 3-5 minutes. Cloud Run auto-pulls new image when ready.
+
+### Terraform shows "resource already exists"
+
+**Cause:** Re-running `./deploy.sh` on existing infrastructure
+
+**Solution:** This is normal. Terraform updates resources in-place. If you see:
+```
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+```
+
+This means Terraform safely updated only what changed.
+
+### Service account permissions errors
+
+**Cause:** IAM roles not yet applied
+
+**Check:**
+```bash
+gcloud projects get-iam-policy test-z-1-499406 \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:serviceAccount:app-name@*"
+```
+
+**Expected:** Service account should have these roles:
+- `roles/run.invoker` (public access)
+- `roles/datastore.user` (if Firestore enabled)
+- `roles/secretmanager.secretAccessor` (if Secret Manager enabled)
 
 ## Next Steps
 
