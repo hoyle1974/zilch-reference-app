@@ -1,6 +1,6 @@
 # Zilch Reference Application
 
-A minimal but complete Cloud Run application that demonstrates **all Zilch services** (Phase 1 + Phase 2) and their current status.
+A minimal but complete Cloud Run application that demonstrates **all Zilch services** (Phase 1 through Phase 4) and their current status.
 
 ## Overview
 
@@ -141,7 +141,7 @@ curl https://zilch-reference-app-<random>.run.app/health
 | **Firebase Auth** | ✅ Reads `ZILCH_FIREBASE_ENABLED` env var |
 | **Vertex AI** | ✅ Reads `ZILCH_VERTEX_AI_ENABLED` env var |
 
-### Phase 2 Features
+### Phase 2: CI/CD Features
 
 | Feature | How It's Used |
 |---------|---------------|
@@ -149,6 +149,26 @@ curl https://zilch-reference-app-<random>.run.app/health
 | **Artifact Registry** | Container image stored in private registry |
 | **GitOps Workflow** | Push code → auto-build → auto-deploy |
 | **Environment Variables** | All Zilch config injected automatically |
+
+### Phase 3: Advanced Services
+
+| Service | Demonstrated |
+|---------|--------------|
+| **Pub/Sub** | ✅ Reads `ZILCH_PUBSUB_TOPIC` env var |
+| **Cloud Tasks** | ✅ Reads `ZILCH_CLOUD_TASKS_QUEUE` env var |
+| **BigQuery** | ✅ Reads `ZILCH_BIGQUERY_DATASET` env var |
+| **Cloud KMS** | ✅ Reads `ZILCH_KMS_KEY_ID` env var |
+| **Vision AI** | ✅ Reads `ZILCH_VISION_AI_ENABLED` env var |
+| **Speech-to-Text** | ✅ Reads `ZILCH_SPEECH_TO_TEXT_ENABLED` env var |
+| **Translation** | ✅ Reads `ZILCH_TRANSLATION_ENABLED` env var |
+
+### Phase 4: Scheduler & Monitoring
+
+| Service | How It's Used |
+|---------|---------------|
+| **Cloud Scheduler** | Optional cron jobs that POST to `/api/cron` endpoint |
+| **Cloud Monitoring** | Error rate alerts and emergency circuit breaker |
+| **Budget Alerts** | Notifications when spending approaches limits |
 
 ## Local Development
 
@@ -158,13 +178,22 @@ curl https://zilch-reference-app-<random>.run.app/health
 # Install dependencies
 pip install -r requirements.txt
 
-# Set some test environment variables
+# Set test environment variables (Phase 1 + 2)
 export ZILCH_PROJECT_ID="test-project"
 export ZILCH_APP_NAME="zilch-reference-app"
 export ZILCH_FIRESTORE_DATABASE="(default)"
 export ZILCH_STORAGE_BUCKET="test-bucket"
 export ZILCH_SECRET_PREFIX="test-"
 export ZILCH_FIREBASE_ENABLED="true"
+
+# Phase 3 services (optional)
+export ZILCH_PUBSUB_TOPIC="test-topic"
+export ZILCH_PUBSUB_SUBSCRIPTION="test-subscription"
+export ZILCH_CLOUD_TASKS_QUEUE="projects/test-project/locations/us-central1/queues/test-queue"
+export ZILCH_BIGQUERY_DATASET="test_dataset"
+export ZILCH_VISION_AI_ENABLED="true"
+export ZILCH_SPEECH_TO_TEXT_ENABLED="true"
+export ZILCH_TRANSLATION_ENABLED="true"
 
 # Run Flask app
 python app.py
@@ -404,13 +433,22 @@ GitHub Repo (this code)
          ↓
     Cloud Run (auto-pulls latest image)
          ↓
-    Environment variables injected:
+    Environment variables injected (Phase 1-4):
     - ZILCH_PROJECT_ID
     - ZILCH_FIRESTORE_DATABASE
     - ZILCH_STORAGE_BUCKET
     - ZILCH_SECRET_PREFIX
     - ZILCH_FIREBASE_ENABLED
     - ZILCH_VERTEX_AI_ENABLED
+    - ZILCH_PUBSUB_TOPIC
+    - ZILCH_CLOUD_TASKS_QUEUE
+    - ZILCH_BIGQUERY_DATASET
+    - ZILCH_KMS_KEY_ID
+    - ZILCH_VISION_AI_ENABLED
+    - ZILCH_SPEECH_TO_TEXT_ENABLED
+    - ZILCH_TRANSLATION_ENABLED
+    - ZILCH_SCHEDULER_ENABLED (Phase 4)
+    - ZILCH_MONITORING_ENABLED (Phase 4)
          ↓
     App reads env vars & displays status
 ```
