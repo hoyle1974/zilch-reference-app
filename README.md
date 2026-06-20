@@ -170,6 +170,14 @@ curl https://zilch-reference-app-<random>.run.app/health
 | **Cloud Monitoring** | Error rate alerts and emergency circuit breaker |
 | **Budget Alerts** | Notifications when spending approaches limits |
 
+### MySQL Database
+
+| Feature | How It's Used |
+|---------|---------------|
+| **MySQL Database** | ✅ Reads `ZILCH_MYSQL_HOST`, `ZILCH_MYSQL_PORT`, `ZILCH_MYSQL_USER`, `ZILCH_MYSQL_PASSWORD`, `ZILCH_MYSQL_DATABASE` env vars |
+| **Connection** | Cloud SQL Proxy in Cloud Run Dockerfile enables secure connection from container to MySQL VM |
+| **Migrations** | Database schema managed via migration scripts in `db/migrations/` |
+
 ## Local Development
 
 ### Run Locally
@@ -194,6 +202,13 @@ export ZILCH_BIGQUERY_DATASET="test_dataset"
 export ZILCH_VISION_AI_ENABLED="true"
 export ZILCH_SPEECH_TO_TEXT_ENABLED="true"
 export ZILCH_TRANSLATION_ENABLED="true"
+
+# MySQL database (optional)
+export ZILCH_MYSQL_HOST="127.0.0.1"
+export ZILCH_MYSQL_PORT="3306"
+export ZILCH_MYSQL_USER="test_user"
+export ZILCH_MYSQL_PASSWORD="test_password"
+export ZILCH_MYSQL_DATABASE="test_db"
 
 # Run Flask app
 python app.py
@@ -411,12 +426,77 @@ gcloud projects get-iam-policy test-z-1-499406 \
 - `roles/datastore.user` (if Firestore enabled)
 - `roles/secretmanager.secretAccessor` (if Secret Manager enabled)
 
+## Using MySQL with the Reference App
+
+If you enabled MySQL during `./deploy.sh`, your app receives connection details automatically:
+
+### Connecting to MySQL from Python
+
+```python
+import mysql.connector
+import os
+
+if os.getenv('ZILCH_MYSQL_HOST'):
+    db = mysql.connector.connect(
+        host=os.getenv('ZILCH_MYSQL_HOST'),
+        port=int(os.getenv('ZILCH_MYSQL_PORT', 3306)),
+        user=os.getenv('ZILCH_MYSQL_USER'),
+        password=os.getenv('ZILCH_MYSQL_PASSWORD'),
+        database=os.getenv('ZILCH_MYSQL_DATABASE')
+    )
+    cursor = db.cursor()
+    cursor.execute("SELECT 1")
+    result = cursor.fetchone()
+    print(f"✅ Connected to MySQL: {result}")
+```
+
+### Database Migrations
+
+The reference app includes migration tooling:
+
+```bash
+# View available migrations
+ls db/migrations/
+
+# Apply migrations
+./db/migrate.sh up
+
+# Check migration status
+./db/migrate.sh status
+
+# Create a new migration
+cat > db/migrations/002-add-users-table.sql <<EOF
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+EOF
+
+# Apply the new migration
+./db/migrate.sh up
+```
+
+### Direct Database Access
+
+For local development or debugging:
+
+```bash
+# Using Cloud SQL Proxy (local access)
+cloud-sql-proxy compute/PROJECT_ID/REGION/zilch-mysql-vm &
+mysql -h 127.0.0.1 -u zilch_user -p
+
+# Using SSH (bastion access)
+gcloud compute ssh zilch-mysql-vm --zone=us-central1-a
+mysql -u zilch_user -p
+```
+
 ## Next Steps
 
 After reviewing the reference app:
 
 1. **Customize** - Modify `app.py` to demo specific services
-2. **Add Features** - Integrate with Firestore, Storage, Firebase
+2. **Add Features** - Integrate with Firestore, Storage, Firebase, MySQL
 3. **Use as Template** - Base your own app on this structure
 4. **Phase 2 Demo** - Show how Cloud Build auto-deploys on git push
 
@@ -447,6 +527,11 @@ GitHub Repo (this code)
     - ZILCH_VISION_AI_ENABLED
     - ZILCH_SPEECH_TO_TEXT_ENABLED
     - ZILCH_TRANSLATION_ENABLED
+    - ZILCH_MYSQL_HOST
+    - ZILCH_MYSQL_PORT
+    - ZILCH_MYSQL_USER
+    - ZILCH_MYSQL_PASSWORD
+    - ZILCH_MYSQL_DATABASE
     - ZILCH_SCHEDULER_ENABLED (Phase 4)
     - ZILCH_MONITORING_ENABLED (Phase 4)
          ↓
