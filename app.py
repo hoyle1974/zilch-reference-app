@@ -133,23 +133,32 @@ def check_mysql_health():
     if not os.getenv("ZILCH_MYSQL_HOST"):
         return {"status": "disabled", "message": "MySQL not configured"}
 
+    host = os.getenv("ZILCH_MYSQL_HOST")
+    port = os.getenv("ZILCH_MYSQL_PORT", "3306")
+    user = os.getenv("ZILCH_MYSQL_USER")
+    password_env = os.getenv("ZILCH_MYSQL_PASSWORD", "")
+    database = os.getenv("ZILCH_MYSQL_DATABASE")
+
     try:
-        password = resolve_secret(os.getenv("ZILCH_MYSQL_PASSWORD", ""))
+        password = resolve_secret(password_env)
+        debug_info = f"Connecting to {host}:{port} as {user}. Password env: {password_env[:20]}{'...' if len(password_env) > 20 else ''} (resolved: {len(password)} chars)"
+
         conn = mysql.connector.connect(
-            host=os.getenv("ZILCH_MYSQL_HOST"),
-            port=int(os.getenv("ZILCH_MYSQL_PORT", 3306)),
-            user=os.getenv("ZILCH_MYSQL_USER"),
+            host=host,
+            port=int(port),
+            user=user,
             password=password,
-            database=os.getenv("ZILCH_MYSQL_DATABASE"),
+            database=database,
             connection_timeout=5
         )
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
         cursor.close()
         conn.close()
-        return {"status": "online", "message": "Connected successfully"}
+        return {"status": "online", "message": f"Connected successfully. {debug_info}"}
     except Exception as e:
-        return {"status": "offline", "message": str(e)[:100]}
+        debug_info = f"Tried {host}:{port} as {user}. Password env: {password_env[:20]}{'...' if len(password_env) > 20 else ''}"
+        return {"status": "offline", "message": f"{str(e)[:100]}. {debug_info}"}
 
 
 def check_firestore_health():
