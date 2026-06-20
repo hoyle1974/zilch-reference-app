@@ -9,9 +9,31 @@ import json
 from flask import Flask, render_template_string, jsonify
 from datetime import datetime
 import mysql.connector
-from google.cloud import firestore, storage, bigquery, pubsub_v1
+from google.cloud import firestore, storage, bigquery, pubsub_v1, secretmanager
 
 app = Flask(__name__)
+
+_secret_cache = {}
+
+def resolve_secret(value):
+    """Resolve sm:// prefixed secrets from Secret Manager."""
+    if not value or not value.startswith("sm://"):
+        return value
+
+    if value in _secret_cache:
+        return _secret_cache[value]
+
+    try:
+        secret_id = value[5:]  # Remove "sm://" prefix
+        project = os.getenv("ZILCH_PROJECT_ID", "")
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project}/secrets/{secret_id}/versions/latest"
+        response = client.access_secret_version(request={"name": name})
+        secret_value = response.payload.data.decode("UTF-8")
+        _secret_cache[value] = secret_value
+        return secret_value
+    except Exception:
+        return value
 
 
 def check_service_status():
@@ -112,11 +134,12 @@ def check_mysql_health():
         return {"status": "disabled", "message": "MySQL not configured"}
 
     try:
+        password = resolve_secret(os.getenv("ZILCH_MYSQL_PASSWORD", ""))
         conn = mysql.connector.connect(
             host=os.getenv("ZILCH_MYSQL_HOST"),
             port=int(os.getenv("ZILCH_MYSQL_PORT", 3306)),
             user=os.getenv("ZILCH_MYSQL_USER"),
-            password=os.getenv("ZILCH_MYSQL_PASSWORD"),
+            password=password,
             database=os.getenv("ZILCH_MYSQL_DATABASE"),
             connection_timeout=5
         )
