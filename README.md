@@ -119,14 +119,35 @@ Machine-readable status:
 }
 ```
 
-### Health Check (`/health`)
+### Health Check Endpoints
 
-Cloud Run and Kubernetes-compatible:
+**Basic Health Check (`/health`)** — Cloud Run and Kubernetes-compatible:
 
 ```bash
 curl https://zilch-reference-app-<random>.run.app/health
 # {"status":"healthy"}
 ```
+
+**Service Status Check (`/health-check`)** — Detailed status for all Zilch services:
+
+```bash
+curl https://zilch-reference-app-<random>.run.app/health-check
+# {
+#   "BigQuery": {"status": "disabled", "message": "BigQuery not configured"},
+#   "Cloud Storage": {"status": "disabled", "message": "Cloud Storage not configured"},
+#   "Firestore": {"status": "disabled", "message": "Firestore not configured"},
+#   "MySQL Database": {
+#     "status": "online",
+#     "message": "Connected successfully..."
+#   },
+#   "Pub/Sub": {"status": "disabled", "message": "Pub/Sub not configured"}
+# }
+```
+
+The `/health-check` endpoint tests actual connectivity to each service and displays:
+- **enabled/disabled** — Whether service is provisioned
+- **online/offline** — Whether service is reachable and working
+- **message** — Connection details or error message
 
 ## What It Demonstrates
 
@@ -175,8 +196,18 @@ curl https://zilch-reference-app-<random>.run.app/health
 | Feature | How It's Used |
 |---------|---------------|
 | **MySQL Database** | ✅ Reads `ZILCH_MYSQL_HOST`, `ZILCH_MYSQL_PORT`, `ZILCH_MYSQL_USER`, `ZILCH_MYSQL_PASSWORD`, `ZILCH_MYSQL_DATABASE` env vars |
-| **Connection** | Cloud SQL Proxy in Cloud Run Dockerfile enables secure connection from container to MySQL VM |
+| **Connection** | Public IP + randomized port with strong password (non-standard port provides security layer) |
 | **Migrations** | Database schema managed via migration scripts in `db/migrations/` |
+| **Health Checks** | `/health-check` endpoint verifies MySQL connectivity and displays status |
+| **Security** | MySQL password securely injected by Cloud Run from Secret Manager (not in env vars or Terraform state) |
+
+**Implementation Details:**
+
+- Cloud Run service receives MySQL connection info from Terraform outputs
+- Password is injected securely via `secret_key_ref` (Secret Manager reference)
+- App reads standard `ZILCH_MYSQL_*` environment variables
+- Health check endpoint tests connectivity and reports status in real-time
+- Firewall rules restrict access to non-standard port from specific sources
 
 ## Local Development
 
