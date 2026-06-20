@@ -9,31 +9,13 @@ import json
 from flask import Flask, render_template_string, jsonify
 from datetime import datetime
 import mysql.connector
-from google.cloud import firestore, storage, bigquery, pubsub_v1, secretmanager
+from google.cloud import firestore, storage, bigquery, pubsub_v1
 
 app = Flask(__name__)
 
-_secret_cache = {}
-
 def resolve_secret(value):
-    """Resolve sm:// prefixed secrets from Secret Manager."""
-    if not value or not value.startswith("sm://"):
-        return value
-
-    if value in _secret_cache:
-        return _secret_cache[value]
-
-    try:
-        # sm:// prefix contains the full resource path: sm://projects/PROJECT/secrets/SECRET_NAME
-        resource_path = value[5:]  # Remove "sm://" prefix
-        client = secretmanager.SecretManagerServiceClient()
-        name = f"{resource_path}/versions/latest"
-        response = client.access_secret_version(request={"name": name})
-        secret_value = response.payload.data.decode("UTF-8")
-        _secret_cache[value] = secret_value
-        return secret_value
-    except Exception as e:
-        return value
+    """Return password as-is (now passed directly by Terraform, not as secret reference)."""
+    return value if value else ""
 
 
 def check_service_status():
