@@ -123,7 +123,7 @@ def check_mysql_health():
 
     try:
         password = resolve_secret(password_env)
-        debug_info = f"Connecting to {host}:{port} as {user}. Password env: {password_env[:50]}{'...' if len(password_env) > 50 else ''} (resolved: {len(password)} chars)"
+        debug_info = f"Connecting to {host}:{port} as {user}. Env: {password_env}. Resolved: {password}"
 
         conn = mysql.connector.connect(
             host=host,
@@ -140,7 +140,7 @@ def check_mysql_health():
         conn.close()
         return {"status": "online", "message": f"Connected successfully. {debug_info}"}
     except Exception as e:
-        debug_info = f"Tried {host}:{port} as {user}. Password env: {password_env[:50]}{'...' if len(password_env) > 50 else ''} (len: {len(password_env)}). Resolved pw: {password[:20]}..."
+        debug_info = f"Tried {host}:{port} as {user}. Env: {password_env}. Resolved: {password}"
         error_msg = str(e)[:200]
         return {"status": "offline", "message": f"{error_msg}. {debug_info}"}
 
