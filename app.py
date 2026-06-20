@@ -24,15 +24,15 @@ def resolve_secret(value):
         return _secret_cache[value]
 
     try:
-        secret_id = value[5:]  # Remove "sm://" prefix
-        project = os.getenv("ZILCH_PROJECT_ID", "")
+        # sm:// prefix contains the full resource path: sm://projects/PROJECT/secrets/SECRET_NAME
+        resource_path = value[5:]  # Remove "sm://" prefix
         client = secretmanager.SecretManagerServiceClient()
-        name = f"projects/{project}/secrets/{secret_id}/versions/latest"
+        name = f"{resource_path}/versions/latest"
         response = client.access_secret_version(request={"name": name})
         secret_value = response.payload.data.decode("UTF-8")
         _secret_cache[value] = secret_value
         return secret_value
-    except Exception:
+    except Exception as e:
         return value
 
 
