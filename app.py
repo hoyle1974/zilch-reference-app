@@ -153,12 +153,14 @@ def check_mysql_health():
         )
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
+        cursor.fetchall()
         cursor.close()
         conn.close()
         return {"status": "online", "message": f"Connected successfully. {debug_info}"}
     except Exception as e:
         debug_info = f"Tried {host}:{port} as {user}. Password env: {password_env[:20]}{'...' if len(password_env) > 20 else ''}"
-        return {"status": "offline", "message": f"{str(e)[:100]}. {debug_info}"}
+        error_msg = str(e)[:200]
+        return {"status": "offline", "message": f"{error_msg}. {debug_info}"}
 
 
 def check_firestore_health():
