@@ -135,7 +135,7 @@ def check_service_status():
         },
         "MySQL Database": {
             "enabled": os.getenv("ZILCH_MYSQL_HOST") != "",
-            "env_vars": ["ZILCH_MYSQL_HOST", "ZILCH_MYSQL_PORT", "ZILCH_MYSQL_USER", "ZILCH_MYSQL_PASSWORD", "ZILCH_MYSQL_DATABASE"],
+            "env_vars": ["ZILCH_MYSQL_HOST", "ZILCH_MYSQL_PORT", "ZILCH_MYSQL_DATABASE"],
             "description": "Relational database on e2-micro VM (~$1.26/month)",
             "status": "✅ ENABLED" if os.getenv("ZILCH_MYSQL_HOST") else "⭕ DISABLED",
         },
@@ -157,7 +157,6 @@ def check_mysql_health():
 
     try:
         password = resolve_secret(password_env)
-        debug_info = f"Connecting to {host}:{port} as {user}. Env: {password_env}. Resolved: {password}"
 
         conn = mysql.connector.connect(
             host=host,
@@ -172,11 +171,10 @@ def check_mysql_health():
         cursor.fetchall()
         cursor.close()
         conn.close()
-        return {"status": "online", "message": f"Connected successfully. {debug_info}"}
+        return {"status": "online", "message": "Connected successfully"}
     except Exception as e:
-        debug_info = f"Tried {host}:{port} as {user}. Env: {password_env}. Resolved: {password}"
         error_msg = str(e)[:200]
-        return {"status": "offline", "message": f"{error_msg}. {debug_info}"}
+        return {"status": "offline", "message": error_msg}
 
 
 def check_firestore_health():
@@ -270,8 +268,6 @@ def get_environment_info():
         "translation_enabled": os.getenv("ZILCH_TRANSLATION_ENABLED", "Not set"),
         "mysql_host": os.getenv("ZILCH_MYSQL_HOST", "Not set"),
         "mysql_port": os.getenv("ZILCH_MYSQL_PORT", "Not set"),
-        "mysql_user": os.getenv("ZILCH_MYSQL_USER", "Not set"),
-        "mysql_password": os.getenv("ZILCH_MYSQL_PASSWORD", "Not set"),
         "mysql_database": os.getenv("ZILCH_MYSQL_DATABASE", "Not set"),
     }
 
@@ -611,14 +607,6 @@ HTML_TEMPLATE = """
                 <div class="info-item">
                     <span class="info-label">MySQL Port</span>
                     <span class="info-value">{{ env.mysql_port }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">MySQL User</span>
-                    <span class="info-value">{{ env.mysql_user }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">MySQL Password</span>
-                    <span class="info-value">{{ env.mysql_password }}</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">MySQL Database</span>
