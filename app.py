@@ -550,6 +550,19 @@ HTML_TEMPLATE = """
         </div>
 
         <h2 class="section-title">🔐 Environment Variables</h2>
+        <div class="info-box" style="background: #fef3f2; border-left-color: #ef4444;">
+            <div style="margin-bottom: 15px; color: #7f1d1d;">
+                <strong>⚠️ Security Notice:</strong> This dashboard displays non-sensitive configuration only.
+                <br><br>
+                <strong>Credentials are stored securely in Google Secret Manager</strong> and are never displayed:
+                <ul style="margin: 10px 0; padding-left: 20px; color: #7f1d1d;">
+                    <li><strong>Database passwords</strong> — fetched from Secret Manager at runtime</li>
+                    <li><strong>API keys</strong> — managed through Secret Manager service bindings</li>
+                    <li><strong>Authentication tokens</strong> — never stored in environment variables</li>
+                </ul>
+                For secure credential access: use Secret Manager client libraries or Cloud Run service account binding with Workload Identity.
+            </div>
+        </div>
         <div class="info-box">
             <div class="info-grid">
                 <div class="info-item">
