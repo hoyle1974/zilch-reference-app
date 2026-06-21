@@ -247,6 +247,32 @@ python app.py
 # Visit http://localhost:8080
 ```
 
+### Using Secrets Locally
+
+For the MySQL password and other sensitive values, use environment variables or a `.env.local` file:
+
+**Option 1: Set environment variable directly**
+
+```bash
+export ZILCH_MYSQL_PASSWORD="local_test_password"
+python app.py
+```
+
+**Option 2: Create `.env.local` file (recommended)**
+
+```bash
+cat > .env.local <<EOF
+export ZILCH_MYSQL_PASSWORD="local_test_password"
+EOF
+
+source .env.local
+python app.py
+```
+
+The `.env.local` file is git-ignored and safe for storing local test credentials.
+
+**In production (Cloud Run):** The app fetches `ZILCH_MYSQL_PASSWORD` from Google Secret Manager, not from environment variables.
+
 ### Build Docker Image Locally
 
 ```bash
