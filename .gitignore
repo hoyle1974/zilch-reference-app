@@ -24,6 +24,7 @@ wheels/
 venv/
 ENV/
 env/
+.venv/
 
 # IDE
 .vscode/
@@ -43,3 +44,14 @@ env/
 
 # Logs
 *.log
+
+# Terraform state (contains secrets, environment-specific)
+terraform.tfstate
+terraform.tfstate.*
+*.tfstate
+
+# Temporary SDD artifacts
+.superpowers/
+
+# Deployment logs
+.zilch-deployment-*.txt
