@@ -9,9 +9,43 @@ import json
 from flask import Flask, render_template_string, jsonify
 from datetime import datetime
 import mysql.connector
-from google.cloud import firestore, storage, bigquery, pubsub_v1
+from google.cloud import firestore, storage, bigquery, pubsub_v1, secretmanager
 
 app = Flask(__name__)
+
+def get_secret(secret_name):
+    """
+    Fetch secret from Google Secret Manager.
+    Falls back to environment variable if set (for local development).
+    """
+    # Extract the secret key name (e.g., "ZILCH_MYSQL_PASSWORD" from the full path)
+    env_key = secret_name.split('/')[-3]
+
+    # Check env var first (local development)
+    if os.getenv(env_key):
+        return os.getenv(env_key)
+
+    # Try Secret Manager
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        response = client.access_secret_version(request={"name": secret_name})
+        return response.payload.data.decode("UTF-8")
+    except Exception as e:
+        app.logger.warning(f"Failed to fetch {secret_name}: {e}")
+        return ""
+
+
+_cached_mysql_password = None
+
+def _load_secrets():
+    """Load secrets on app startup."""
+    global _cached_mysql_password
+    project_id = os.getenv("ZILCH_PROJECT_ID", "")
+    if project_id and os.getenv("ZILCH_MYSQL_HOST"):
+        secret_name = f"projects/{project_id}/secrets/ZILCH_MYSQL_PASSWORD/versions/latest"
+        _cached_mysql_password = get_secret(secret_name)
+
+_load_secrets()
 
 def resolve_secret(value):
     """Return password as-is (now passed directly by Terraform, not as secret reference)."""
