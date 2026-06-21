@@ -152,7 +152,7 @@ def check_mysql_health():
     host = os.getenv("ZILCH_MYSQL_HOST")
     port = os.getenv("ZILCH_MYSQL_PORT", "3306")
     user = os.getenv("ZILCH_MYSQL_USER")
-    password_env = os.getenv("ZILCH_MYSQL_PASSWORD", "")
+    password_env = _cached_mysql_password or os.getenv("ZILCH_MYSQL_PASSWORD", "")
     database = os.getenv("ZILCH_MYSQL_DATABASE")
 
     try:
